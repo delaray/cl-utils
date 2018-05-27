@@ -1,0 +1,584 @@
+(in-package :UTILITIES)
+
+;;;*******************************************************************************
+;;;
+;;; FILE CONTENTS:
+;;; --------------
+;;;
+;;; Part 1:  Basis Constants and Functions
+;;; --------------------------------------
+;;;
+;;; 2PI
+;;; *RADIANS/DEGREES*
+;;; *DEGREES/RADIANS*
+;;; SQUARED
+;;; AVG
+;;; PERCENTAGE
+;;; DEGREES-TO-RADIANS
+;;; MOD-2PI
+;;; MOD-PI
+;;;
+;;;
+;;; Part 2: Points & Lines
+;;; -----------------------
+;;;
+;;; DISTANCE-FROM-POINT-TO-EDGE
+;;; POINT-ON-LINE-SEGMENT-P 
+;;; POINT-DISTANCE-SQUARED
+;;; COMPUTE-LINE-GRADIENT
+;;; COMPUTE-POINTS-ON-LINE
+;;; COMPUTE-ORTHOGONAL-LINE
+;;; COMPUTE-ORTHOGONAL-SEGMENT
+;;; COMPUTE-MIDPOINT
+;;;
+;;;
+;;; Part 3: Circles
+;;; ---------------
+;;;
+;;; POINTS-ON-ARC
+;;; POINTS-ON-CIRCLE
+;;; NEXT-POINT-ON-CIRCLE
+;;; COMPUTE-POINTS-ON-CIRCLE
+;;;
+;;;
+;;; Part 4: Statistical Functions
+;;; -----------------------------
+;;;
+;;; GAUSSIAN-DEVIATE
+;;;
+;;;
+;;;*******************************************************************************
+
+
+;;;************************************************************************
+;;; PART 1: BASIC CONSTANTS AND FUNCTIONS
+;;;************************************************************************
+
+
+;;;-------------------------------------------------------------------------------
+;;; Trigonometric Constants
+;;;-------------------------------------------------------------------------------
+
+(defconstant 2PI (* 2 pi))
+
+(defconstant PI-OVER-2 (/ pi 2))
+(defconstant PI-OVER-3 (/ pi 3))
+(defconstant PI-OVER-4 (/ pi 4))
+(defconstant PI-OVER-5 (/ pi 5))
+(defconstant PI-OVER-6 (/ pi 6))
+(defconstant PI-OVER-7 (/ pi 7))
+(defconstant PI-OVER-8 (/ pi 8))
+
+(defconstant *RADIANS/DEGREES* (/ 2PI 360))
+
+(defconstant *DEGREES/RADIANS* (/ 360 2PI))
+
+;;;-------------------------------------------------------------------------------
+;;; SQUARED
+;;;-------------------------------------------------------------------------------
+
+(defun SQUARED (x) (* x x))
+
+;;;-------------------------------------------------------------------
+;;; AVG
+;;;-------------------------------------------------------------------
+
+(defun AVG (x &key (key #'identity))
+  (cond ((null x) 
+	 0)
+	(t
+	 (/ (apply #'+ (mapcar key x))
+	    (length x)))))
+
+;;;----------------------------------------------------------------------
+;;; PERCENTAGE
+;;;----------------------------------------------------------------------
+
+;;; Returns the percentenge of x in y.
+
+(defun PERCENTAGE (x y)
+      (/ (round (* 10000.0 (/ x y)))
+	 100.0))
+
+;;;------------------------------------------------------------------------;;;
+;;; DEGREES-TO-RADIANS
+;;;------------------------------------------------------------------------;;;
+
+(defun DEGREES-TO-RADIANS (angle)
+  (* angle *radians/degrees*))
+ 
+
+;;;------------------------------------------------------------------------;;;
+;;; RADIANS-TO-DEGREES
+;;;------------------------------------------------------------------------;;;
+
+(defun RADIANS-TO-DEGREES (angle)
+  (* angle *degrees/radians*))
+ 
+;;;------------------------------------------------------------------------;;;
+;;; MOD-2PI
+;;;------------------------------------------------------------------------;;;
+
+;; Return an angle between 0 & 2PI. Assume angle is in radians
+
+(defun MOD-2PI (angle)
+  (setf angle (mod angle 2Pi))
+  (when (< angle 0)
+    (setf angle (+ angle 2Pi)))
+  (float angle 1.0s0))
+
+;;;-----------------------------------------------------------------------
+;;;
+;;;-----------------------------------------------------------------------
+
+;;; Return an angle between 0 & PI. Assume angle is in radians 
+
+(defun MOD-PI (angle)
+  (setf angle (mod-2pi angle))
+  (when (> angle pi)
+    (setf angle (- angle 2Pi)))
+  (float angle 1.0s0))
+
+;;;-----------------------------------------------------------------------
+;;; PART 2: Points and Lines
+;;;------------------------------------------------------------------------;;;
+
+;;; Assume the following formula. If Ax + By + C = 0 is the equation of a line,
+;;; then the shortest distance (the PERPENDICULAR DISTANCE) d of a point P(x0, y0)
+;;; from the line is given by:
+;;;
+;;;     abs (Ax0 + By0 + C)
+;;; d = --------------------
+;;;     sqrt ((* A A) + (* B B))
+;;;
+;;; The point of intersection is given by
+;;;
+;;;      (* B B)x0 - ABy0 - AC
+;;; Px = ---------------------
+;;;       sqrt ((* A A) + (* B B))
+;;;
+;;;      -ABx0 + (* A A)y0 - BC
+;;; Py = ---------------------
+;;;       sqrt ((* A A) + (* B B))
+
+
+;;;------------------------------------------------------------------------;;;
+;;; DISTANCE-FROM-POINT-TO-EDGE
+;;;------------------------------------------------------------------------;;;
+
+(defun DISTANCE-FROM-POINT-TO-EDGE (x0 y0 x1 y1 x2 y2)
+  (let* ((X (- x1 x2))
+	 (Y (- y1 y2))
+	 (A Y)
+	 (B (- X))
+	 (AB (* A B))
+	 (B2 (* B B))
+	 (A2 (* A A))
+	 (C (- (* X y1)(* Y x1)))
+	 (nominator (abs (+ (* A x0)(* B y0) C)))
+	 (nominator-squared (* nominator nominator))
+	 (denom-squared (+ A2 B2)))
+    
+    (cond ((zerop denom-squared)
+	   most-positive-fixnum)
+	  (t
+	   (let ((Px (floor (+ (* B2 x0) (- (* AB y0)) (- (* A C)))
+			    denom-squared))
+		 (Py (floor (+ (- (* AB x0)) (* A2 y0) (- (* B C)))
+			    denom-squared))
+		 (distance (/ nominator-squared denom-squared)))
+	     (cond ((point-on-line-segment-p Px Py x1 y1 x2 y2)
+		    distance)
+		   (t
+		    (let* ((d1 (point-distance-squared x0 y0 x1 y1))
+			   (d2 (point-distance-squared x0 y0 x2 y2)))
+		      (min d1 d2)))))))))
+
+;;; ----------------------------------------------------------------------
+;;; POINT-ON-LINE-SEGMENT-P 
+;;; ----------------------------------------------------------------------
+
+;;; This functions assumes the point is already on the line that the line segment
+;;;  is on, it simply checks that the point is within the range of the endpoints
+;;;  of the line segment.
+
+(defun POINT-ON-LINE-SEGMENT-P (px py x1 y1 x2 y2)
+  (psetf x1 (min x1 x2) x2 (max x1 x2) y1 (min y1 y2) y2 (max y1 y2))
+  (and (<= x1 px x2)(<= y1 py y2)))
+
+;;;----------------------------------------------------------------------
+;;; DISTANCE
+;;;----------------------------------------------------------------------
+
+(defun DISTANCE (x1 y1 x2 y2)
+  (sqrt (+ (expt (abs (- x2 x1)) 2)(expt (abs (- y2 y1)) 2))))
+
+;;;----------------------------------------------------------------------
+;;; POINT-DISTANCE-SQUARED
+;;;----------------------------------------------------------------------
+;;;
+
+;;; Returns the sum of the square of the distances of the adjacent & opposite
+;;; sides of the standard implied right angle triangle.
+
+(defun POINT-DISTANCE-SQUARED (x1 x2 y1 y2)
+  (+ (expt (- x1 x2) 2)(expt (- y1 y2) 2)))
+    
+;;;------------------------------------------------------------------------
+;;; COMPUTE-LINE-GRADIENT
+;;; -----------------------------------------------------------------------
+
+(defun COMPUTE-LINE-GRADIENT (x1 y1 x2 y2)
+  (let* ((y (- y2 y1))
+	 (x (- x2 x1))
+	 (a (if (= x 0) most-positive-fixnum (/ y x)))
+	 (b (- y1 (* a x1))))
+    (values a b)))
+
+;;;------------------------------------------------------------------------
+;;; COMPUTE-POINTS-ON-LINE
+;;; -----------------------------------------------------------------------
+
+;;; (1) y1 = ax1 + b
+;;; (2) y2 = ax2 + b
+;;;
+;;; (3) x1 = y1/a - b/a
+;;;
+;;; (1) ==>  b = y1 - ax1
+;;;
+;;; (2) ==> y2 = ax2 + y1 - ax1
+;;;     ==> (y2 - y1) = a(x2 - x1)
+;;;
+;;;              (y2 - y1)              
+;;;     ===> a = ---------
+;;;              (x2 - x1)
+;;;
+
+(defun COMPUTE-POINTS-ON-LINE (count x1 y1 x2 y2)
+  (cond ((= y1 y2)
+	 (values (compute-points-on-horizontal-line count x1 x2 y1)
+		 0))
+	((= x1 x2)
+	 (values (compute-points-on-vertical-line count x1 y1 y2)
+		 1 #+IGNORE most-positive-fixnum))
+	(t
+	 (let* ((x (- x2 x1))
+		(x-inc (/ x count))
+		(points nil))
+	   (multiple-value-bind (a b)
+	       (compute-line-gradient  x1 y1 x2 y2)
+	     (dotimes (i count)
+	       (let* ((xi (+ x1 (* i x-inc)))
+		      (yi (+ (* a xi) b)))
+		 (push (list (round xi)(round yi)) points)))
+	     (push (list x2 y2) points)
+	     (values (nreverse points) a b))))))
+
+;;; -----------------------------------------------------------------------;;;
+
+(defun COMPUTE-POINTS-ON-HORIZONTAL-LINE (count x1 x2 y)
+  (let* ((x (- x2 x1))
+	 (x-inc (/ x count))
+	 (points nil))
+    (dotimes (i count)
+      (let* ((xi (+ x1 (* i x-inc))))
+	(push (list (round xi) y) points)))
+    (push (list x2 y) points)
+    (nreverse points)))
+ 
+;;; -----------------------------------------------------------------------;;;
+
+(defun COMPUTE-POINTS-ON-VERTICAL-LINE (count x y1 y2)
+  (let* ((y (- y2 y1))
+	 (y-inc (/ y count))
+	 (points nil))
+    (dotimes (i count)
+      (let* ((yi (+ y1 (* i y-inc))))
+	(push (list x (round yi)) points)))
+    (push (list x y2) points)
+    (nreverse points)))
+ 
+;;; -----------------------------------------------------------------------;;;
+;;; COMPUTE-ORTHOGONAL-LINE
+;;; -----------------------------------------------------------------------;;;
+
+;;; Compute the orthogoal that intersects the line ax + b at the point
+;;; (x0, y0).
+;;;
+;;; The gradient a2 is given by -1/a1 for non-zero a1.
+;;; because the lines intersect at (x0, y0) we have
+;;;
+;;; y0 = a1x0 + b1
+;;; y0 = a2x0 + b2
+;;;
+;;; a1x0 + b1 = a2x0 + b2
+;;; b2 = a1x0 + b1 - a2x0
+;;; 
+;;; b2 = x0(a1 - a2) + b1
+
+(defun COMPUTE-ORTHOGONAL-LINE (a1 b1 x0 y0)
+  (declare (ignore y0))
+    (let* ((a2 (if (= a1 0) most-positive-fixnum (- (/ 1 a1))))
+	   (b2 (+ b1 (* x0 (- a1 a2)))))
+      (values a2 b2)))
+
+;;; -----------------------------------------------------------------------;;;
+;;; COMPUTE-ORTHOGONAL-SEGMENT
+;;; -----------------------------------------------------------------------;;;
+
+(defun COMPUTE-ORTHOGONAL-SEGMENT (x1 y1 x2 y2 x y x-inc)
+  (multiple-value-bind (a1 b1)
+      (compute-line-gradient x1 y1 x2 y2)
+    ;;(format t "~%--------------------------------------")
+    ;;(format t "~%Gradient = ~a, Intercept = ~a" a1 b1)
+    (cond ((= a1 0)
+	   (values x (- y x-inc) x (+ y x-inc) a1 b1))
+	  ((= a1 most-positive-fixnum)
+	    (values (- x x-inc) y (+ x x-inc) y a1 b1))
+	  (t
+	   (let* ((x3 (- x x-inc))
+		  (x4 (+ x x-inc))
+		  y3 y4)
+	     (multiple-value-bind (a2 b2)
+		 (compute-orthogonal-line a1 b1 x y)
+	       (cond ((> (abs b2) 2000)
+		      (psetf y3 y y4 y))
+		     (t
+		      (psetf y3 (round (+ (* x3 a2) b2))
+			     y4 (round (+ (* x4 a2) b2)))))
+	       ;;(format t "~%Orthogonal Gradient = ~a, Intercept = ~a" a2 b2)
+	       (values x3 y3 x4 y4 a1 b1)))))))
+
+;;; -----------------------------------------------------------------------
+;;; COMPUTE-MIDPOINT
+;;; -----------------------------------------------------------------------
+
+(defun COMPUTE-MIDPOINT (x1 y1 x2 y2)
+  (list (+ x1 (round (/ (- x2 x1) 2)))(+ y1 (round (/ (- y2 y1) 2)))))
+
+
+;;;************************************************************************
+;;; PART 3: Circles 
+;;;************************************************************************
+
+;;; This function returns a list of n (x y) pairs that are uniformely distributed
+;;; around acircle with center 'center' and diameter 'diameter' starting at
+;;; angle start-angle and ending at end-angle.
+
+;;;-----------------------------------------------------------------------
+;;; POINTS-ON-ARC
+;;;------------------------------------------------------------------------;;;
+
+;;; This function subsumes POINTS-ON-CIRCLE
+
+(defun POINTS-ON-ARC (center diameter n &optional (start-angle 0)(end-angle 2pi))
+  (let* ((radius (/ diameter 2))
+	 (x-center (first center))
+	 (y-center (second center))
+	 (angle-inc (/ (- end-angle start-angle) n))
+	 (angle1 start-angle)
+	 (points nil))
+
+    ;; Move around the circle in increments of 'anc-inc'
+    (dotimes (i n)
+      (let* (;; Use this complex number instead of sin & cos
+	     (euler-number (cis angle1))
+	     ;; The imaginary part is the sin
+	     (sin-mid-angle (imagpart euler-number))
+	     ;; The real part is the cos
+	     (cos-mid-angle (realpart euler-number))
+	     (point-x (+ x-center (round (* (+ 1 radius) cos-mid-angle))))
+	     (point-y (+ y-center (round (* (+ 1 radius) sin-mid-angle)))))
+	(push `(,point-x ,point-y) points)
+	(incf angle1 angle-inc)))
+
+    ;; Return the points
+    (nreverse points))) 
+
+;;;-----------------------------------------------------------------------
+;;; POINTS-ON-CIRCLE
+;;;------------------------------------------------------------------------;;;
+
+;;; This function returns a list of n (x y) pairs that are uniformely distributed
+;;; around acircle with center 'center' and diameter 'diameter' starting at
+;;; angle start-angle.
+
+(defun POINTS-ON-CIRCLE (center radius start-angle n)
+  (let* ((x-center (first center))
+	 (y-center (second center))
+	 (angle-inc (/ 2pi n))
+	 (angle1 start-angle)
+	 (points nil))
+
+    ;; Move around the circle in increments of 'anc-inc'
+    (dotimes (i n)
+      (let* (;; Use this complex number instead of sin & cos
+	     (euler-number (cis angle1))
+	     ;; The imaginary part is the sin
+	     (sin-mid-angle (imagpart euler-number))
+	     ;; The real part is the cos
+	     (cos-mid-angle (realpart euler-number))
+	     ;; Tentative x-position of the label (one-pixel away)
+	     (point-x (+ x-center (round (* (+ 1 radius) cos-mid-angle))))
+	     ;; Tentative y-position of the label (one-pixel away)
+	     (point-y (+ y-center (round (* (+ 1 radius) sin-mid-angle)))))
+	(push `(,point-x ,point-y) points)
+	(incf angle1 angle-inc)))
+
+    ;; Return the points
+    (nreverse points)))
+
+;;;-------------------------------------------------------------------------
+;;; NEXT-POINT-ON-CIRCLE
+;;;-------------------------------------------------------------------------
+
+;;; This function returns a the next point on the circle given a start-angle and
+;;; a angle-incr.
+
+(defun NEXT-POINT-ON-CIRCLE (center diameter start-angle angle-incr)
+  (let* ((radius (/ diameter 2))
+	 ;; Use this complex number instead of sin & cos
+	 (euler-number (cis (+ start-angle angle-incr)))
+	 ;; The imaginary part is the sin
+	 (sin-mid-angle (imagpart euler-number))
+	 ;; The real part is the cos
+	 (cos-mid-angle (realpart euler-number))
+	 ;; Tentative x-position of the label (one-pixel away)
+	 (point-x (+ (first center) (round (* (+ 1 radius) cos-mid-angle))))
+	 ;; Tentative y-position of the label (one-pixel away)
+	 (point-y (+ (second center) (round (* (+ 1 radius) sin-mid-angle)))))
+
+    ;; Return the next point
+    `(,point-x ,point-y)))
+
+;;;------------------------------------------------------------------------
+;;; COMPUTE-POINTS-ON-CIRCLE
+;;;------------------------------------------------------------------------
+
+(defun COMPUTE-POINTS-ON-CIRCLE (count x0 y0 radius 
+				 &key
+				 (z0 0)
+				 (start 0)
+				 (end (* 2 pi)))
+  (let ((points nil)
+	(angle-inc (/ ( - end start) count))
+	(angle start))
+    (dotimes (i count)
+      (push (list (round (+ x0 (* radius (cos angle))))
+		  (round (+ y0 (* radius (sin angle))))
+		  z0)
+	    points)
+      (incf angle angle-inc))
+    (nreverse points))) 
+
+;;;------------------------------------------------------------------------
+;;; COMPUTE-POINTS-ON-CIRCLE
+;;;------------------------------------------------------------------------
+
+(defun COMPUTE-REAL-POINTS-ON-CIRCLE (count x0 y0 radius 
+				 &key
+				 (z0 0)
+				 (start 0)
+				 (end (* 2 pi)))
+  (let ((points nil)
+	(angle-inc (/ ( - end start) count))
+	(angle start))
+    (dotimes (i count)
+      (push (list (+ x0 (* radius (cos angle)))
+		  (+ y0 (* radius (sin angle)))
+		  z0)
+	    points)
+      (incf angle angle-inc))
+    (nreverse points))) 
+
+
+;;;************************************************************************
+;;; PART 4: Polynomials
+;;;************************************************************************
+
+;;; Computes the value of a polynomial of order length of
+;;; coefficients. Coefficients are orderded from low powers of x to
+;;; higher powers of x.
+
+(defun POLYNOMIAL (x coefficients)
+  (let ((y 0))
+    (dotimes (i (length coefficients))
+      (incf y (* (nth i coefficients)(expt x i))))
+    y))
+
+;;;------------------------------------------------------------------------
+;;; SSE
+;;;------------------------------------------------------------------------
+
+;;; This is the sum of the squares of the errors function.
+
+(defun SSE (x-vector coefficients t-vector)
+  (let ((square-error 0))
+    (dotimes (i (length x-vector))
+      (incf square-error (expt (- (polynomial (nth i x-vector) coefficients)
+				  (nth i t-vector))
+			       2)))
+    (/ square-error 2.0)))
+
+;;;************************************************************************
+;;; PART 5: Statistical Functions
+;;;************************************************************************
+
+;;; ------------------------------------------------------------------
+;;; GAUSSIAN-DEVIATE
+;;; ------------------------------------------------------------------
+
+;;; With each call, returns a random number from a population centered
+;;; around the origin with specified mean and sd.
+;;;
+;;; Generates a deviate on the real line with given mean and standard
+;;; deviation.  Well. this isn't exactly the standard deviation, but
+;;; it is close enough for our purposes.
+;;;
+;;; Generates a gaussian distribution of numbers whose mean is 0.0 and
+;;; whose variance is 1.0.  From "Numerical Recipes in C" p.217.
+;;;
+;;; -------------------------------------------------------------------
+
+(defun GAUSSIAN-DEVIATE (&optional (mean 0.0) (stddev 1.0))
+  (+ (* (%gaussian-deviate) stddev) mean))
+
+;;; -----------------------------------------------------
+
+(defvar *iset* 0)
+(defvar *gset* 0.0)
+
+(defun %GAUSSIAN-DEVIATE (&optional (idum 1.0))
+  (let ((fac 0.0)
+        (r   1.0)
+        (v1  0.0)
+        (v2  0.0)
+        (ans nil))
+    (cond ((= *iset* 0)
+           (loop while (>= r 1.0)
+	      do 
+	      (setf v1 (- (* 2.0 (random idum)) 1.0))
+	      (setf v2 (- (* 2.0 (random idum)) 1.0))
+	      (setf r (+ (* v1 v1) (* v2 v2))))
+           (setf fac (sqrt (* -2.0 (/ (log r 10) r))))
+           (setf *gset* (* v1 fac))
+           (setf *iset* 1)
+           (setf ans (* v2 fac)))
+          (t
+           (setf *iset* 0)
+           (setf ans *gset*) ))
+    ans))
+
+;;;-------------------------------------------------------------------
+
+;;; Defined as a macro in Macros.lisp
+
+#+IGNORE
+(defun BETWEEN (min n max)
+  (cond ((< n min) min)
+	((> n max) max)
+	(t n)))
+
+;;; -------------------------------------------------------------------------
+;;; End of File
+;;; -------------------------------------------------------------------------
