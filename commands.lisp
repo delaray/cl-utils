@@ -54,7 +54,7 @@
   ;;; ---------------------------------------------------------------------------
 
   (define-repl-command :Util (&rest options)
-    "Load (compile if needed) :parser module with directive as specified by options.
+    "Load (compile if needed) : module with directive as specified by options.
      By nature this puts :meperia onto the *features* list."
     (format t "~&;; ***** Compiling/Loading Utilities~%")
     ;; Following note from Dan Corkill:  Until PQ's interns are fixed:

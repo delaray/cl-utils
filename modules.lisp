@@ -77,7 +77,7 @@
 
 (define-module :DATABASE
   (:directory :utilities-root)
-  (:requires :utilities :postmodern)
+  (:requires :utilities #+IGNORE :postmodern)
   (:files "Database"))
 
 ;;;----------------------------------------------------------------------------

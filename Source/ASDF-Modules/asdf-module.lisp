@@ -1,5 +1,5 @@
 (cl:defpackage #:asdf-module
-  (:use #:cl #:asdf #:mini-module))
+  (:use #:cl #:asdf #:module-manager))
 
 (in-package #:asdf-module)
 
@@ -7,7 +7,7 @@
 (defvar *target-directory*)
 
 (multiple-value-setq (*source-directory* *target-directory*)
-  (module-directories :asdf-module))
+  (module-manager::module-directories :asdf-module))
 
 ;;; We declare all the asdf module directories explicitly.  This is
 ;;; for windows compatibility.  The trailing slash is necessary for

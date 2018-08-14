@@ -1,5 +1,5 @@
 (cl:defpackage #:asdf-module
-  (:use #:cl #:asdf #:mini-module))
+  (:use #:cl #:asdf  #:module-manager))
 
 (in-package :cl-user)
 
