@@ -152,7 +152,7 @@
 	 (setf (gethash (first tokens) table)
 	   (mapcar #'(lambda (x)
 		       (split-sequence inner-delimiter x))
-		   (mapcar #'cleanup-token (rest tokens))))))o
+		   (mapcar #'cleanup-token (rest tokens))))))
     (remhash nil table))
   table)
   

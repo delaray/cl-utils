@@ -235,6 +235,18 @@
 	   (t
 	    body)))))
 
+#-ALLEGRO
+(defun GET-URL-PAGE (url)
+  "Simply do an http-request"
+  (ignore-errors 
+   (multiple-value-bind (x1 x2 x3 x4 body)
+       (drakma:http-request url)
+     (cond ((= code 404)
+	    ;;(format t "~%Page not found: ~a" url)
+	    nil)
+	   (t
+	    body)))))
+
 ;;;-----------------------------------------------------------------------------
 ;;; GET-URL-IMAGE
 ;;;-----------------------------------------------------------------------------
