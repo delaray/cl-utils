@@ -257,6 +257,16 @@
   (ignore-errors (net.aserve.client:do-http-request url :format :binary)))
 
 ;;;------------------------------------------------------------------------------
+
+#-ALLEGRO
+(defun GET-URL-IMAGE (url)
+  "Simply do an http-request"
+  (ignore-errors 
+   (multiple-value-bind (x1 x2 x3 x4 octet-vector)
+       (drakma:http-request url)
+     octet-vector)))
+ 
+;;;------------------------------------------------------------------------------
 ;;; GOOGLE-SEARCH
 ;;;------------------------------------------------------------------------------
 
@@ -270,6 +280,27 @@
 	   :query `(("q" . ,query-string)))))
     result-string))
 
+;;;------------------------------------------------------------------------------
+
+(defun read-chars (stream)
+  (let ((char nil)
+	(chars nil))
+    (loop
+       (setf char (read-char stream nil :eos))
+       (if (eq char :eos)
+	   chars
+	   (push char chars)))))
+
+#-ALLEGRO
+(defun GOOGLE-SEARCH (query-string)
+  "Send the specified query request to Google, and return the resulting HTML.
+   Don't do any post-processing on it.  Query string may contain embedded
+   quotes."
+  (let ((query-url (concatenate 'string  "https://www.google.com/search?q=" query-string)))
+   (multiple-value-bind (x1 x2 x3 x4 stream)
+       (drakma:http-request query-url :want-stream t)
+     (setf (flexi-streams:flexi-stream-external-format stream) :utf-8)
+     stream)))
 
 ;;;-----------------------------------------------------------------------------
 ;;; WIKI-SEARCH
