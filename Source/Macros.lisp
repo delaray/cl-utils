@@ -75,12 +75,13 @@
 
 (defmacro WITH-RESULTS-PATHNAME ((filename &optional (source nil)) &body body)
   `(let* ((%%filename%% (if (pathnamep ,filename) ,filename (make-data-pathname ,filename)))
-	  (directory (pathname-directory %%filename%%)))
-     (if ,source
-	 (setf directory (make-pathname :directory `(,@directory ,source)))
+	  (directory (pathname-directory %%filename%%))
+	  (src ,source))
+     (if src
+	 (setf directory (make-pathname :directory `(,@directory src)))
        (setf directory (make-pathname :directory directory)))
-     (unless (probe-file directory)
-       (make-directory directory))
+     ;; (unless (probe-file directory)
+     ;;   (make-directory directory))
      (setf %%filename%%
        (make-pathname :directory (pathname-directory directory)
 		      :type (pathname-type %%filename%%)

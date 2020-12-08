@@ -165,7 +165,8 @@
 
 
 (defmethod MAKE-DESCRIPTION-STRING ((token NUMBER) &key (delimiter #\space)
-							 (padded nil))
+						     (padded nil))
+  (declare (ignore delimiter padded))
   (format nil "~d" token))
 
 
@@ -362,10 +363,9 @@
 (defmethod STRING-CONTAINS-PUNCTUATION-CHARS-P ((string STRING)
 						&optional
 						(punctuation-chars  '(#\; #\,)))
-  (some #'identity
-	(mapcar #'(lambda (char)
-		    (some #'(lambda (x)(char= x char)) string))
-		punctuation-chars)))
+  (mapcar #'(lambda (char)
+	      (some #'(lambda (x)(char= x char)) string))
+	  punctuation-chars))
 
 ;;;---------------------------------------------------------------------------
 ;;; SPLIT-STRING-BY-PUNCTUATION-CHARS

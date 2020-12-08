@@ -113,15 +113,15 @@
 ;;;-----------------------------------------------------------------------------
 
 (defmethod HYPHENATE-TOKENS ((tokens CONS))
-  (cond ((> (length tokens) 1)
+  (cond ((null tokens)
+	 tokens)
+	((> (length tokens) 1)
 	 (let* ((new-tokens nil))
 	   (dolist (token tokens)
 	     (push token new-tokens)
 	     (push "-" new-tokens))
 	   (setf new-tokens (nreverse (cdr new-tokens)))
 	    (seq-list-to-seq new-tokens)))
-	((null tokens)
-	 tokens)
 	(t
 	 (first tokens))))
 

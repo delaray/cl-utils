@@ -774,6 +774,7 @@
 ;;;-----------------------------------------------------------------------------
 
 (defun MAKE-VALUE-SET (values &optional (count 1)(frequency 0)(name nil))
+  (declare (ignore count frequency))
   (make-instance 'VALUE-SET
     :name name 
     :values values))

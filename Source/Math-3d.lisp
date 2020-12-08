@@ -28,13 +28,13 @@
 ;;;-----------------------------------------------------------------------
 
 (defun SPHERICAL-TO-CARTESIAN (ro theta phi)
-  (let (;; Use this complex number instead of sin & cos
-	(theta-euler (cis theta))
-	(phi-euler (cis phi))
-	(sin-theta (imagpart euler-theta))
-	(cos-theta (realpart euler-theta))
-	(sin-phi  (imagpart euler-phi))
-	(cos-phi (realpart euler-phi)))
+  (let* (;; Use this complex number instead of sin & cos
+	 (theta-euler (cis theta))
+	 (phi-euler (cis phi))
+	 (sin-theta (imagpart theta-euler))
+	 (cos-theta (realpart theta-euler))
+	 (sin-phi  (imagpart phi-euler))
+	 (cos-phi (realpart phi-euler)))
     (list `(,(* ro sin-phi cos-theta)
 	    ,(* ro sin-phi sin-theta)
 	    ,(* ro cos-phi)))))
@@ -242,32 +242,32 @@
 ;;; NOTE: This function probaby does not do what it claims :-)
 
 ;;; This function returns a list of n (x y) pairs that are uniformely distributed
-;;; around acircle with center 'center' and diameter 'diameter' starting at
+;;; around a circle with center 'center' and diameter 'diameter' starting at
 ;;; angle start-angle.
 
-(defmethod POINTS-ON-SPHERE ((center LIST)(ro NUMBER)(slice (eql :X)))
-  (destructuring-bind (x-center y-center z-center) center 
-  (let* ((angle-inc (/ 2pi n))
-	 (angle1 start-angle)
-	 (points nil))
+;; (defmethod POINTS-ON-SPHERE ((center LIST)(ro NUMBER)(slice (eql :X)))
+;;   (destructuring-bind (x-center y-center z-center) center 
+;;   (let* ((angle-inc (/ 2pi n))
+;; 	 (angle1 0 #+IGNORE start-angle)
+;; 	 (points nil))
 
-    ;; Move around the circle in increments of 'anc-inc'
-    (dotimes (i n)
-      (let* (;; Use this complex number instead of sin & cos
-	     (euler-number (cis angle1))
-	     ;; The imaginary part is the sin
-	     (sin-mid-angle (imagpart euler-number))
-	     ;; The real part is the cos
-	     (cos-mid-angle (realpart euler-number))
-	     ;; Tentative x-position of the label (one-pixel away)
-	     (point-x (+ x-center (round (* (+ 1 radius) cos-mid-angle))))
-	     ;; Tentative y-position of the label (one-pixel away)
-	     (point-y (+ y-center (round (* (+ 1 radius) sin-mid-angle)))))
-	(push `(,point-x ,point-y) points)
-	(incf angle1 angle-inc)))
+;;     ;; Move around the circle in increments of 'anc-inc'
+;;     (dotimes (i n)
+;;       (let* (;; Use this complex number instead of sin & cos
+;; 	     (euler-number (cis angle1))
+;; 	     ;; The imaginary part is the sin
+;; 	     (sin-mid-angle (imagpart euler-number))
+;; 	     ;; The real part is the cos
+;; 	     (cos-mid-angle (realpart euler-number))
+;; 	     ;; Tentative x-position of the label (one-pixel away)
+;; 	     (point-x (+ x-center (round (* (+ 1 radius) cos-mid-angle))))
+;; 	     ;; Tentative y-position of the label (one-pixel away)
+;; 	     (point-y (+ y-center (round (* (+ 1 radius) sin-mid-angle)))))
+;; 	(push `(,point-x ,point-y) points)
+;; 	(incf angle1 angle-inc)))
 
-    ;; Return the points
-    (nreverse points))))
+;;     ;; Return the points
+;;    (nreverse points))))
 
 
 ;;; -------------------------------------------------------------------------
