@@ -54,7 +54,7 @@
 ;;; Utilities
 ;;;----------------------------------------------------------------------------
 
-(define-module :Utilities
+(define-module :UTILITIES
   (:directory :utilities-root)
   (:files "Variables"
 	  "Classes"
