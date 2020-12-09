@@ -429,7 +429,6 @@
 ;;; than method version.
 
 (defun CONSTRUCT-STRING (elements)
-  (declare (optimize (speed 3) (safety 1) (debug 1)))
   (let* ((elements-length (length elements))
 	 (s (make-string elements-length))
 	 (cur-pos 0))
@@ -437,7 +436,6 @@
       (setf (schar s cur-pos) element)
       (incf cur-pos))
     s))
-
 
 ;;;---------------------------------------------------------------------------
 ;;; EXPLODE-STRING1

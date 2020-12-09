@@ -113,9 +113,7 @@
 ;;;-----------------------------------------------------------------------------
 
 (defmethod HYPHENATE-TOKENS ((tokens CONS))
-  (cond ((null tokens)
-	 tokens)
-	((> (length tokens) 1)
+  (cond ((> (length tokens) 1)
 	 (let* ((new-tokens nil))
 	   (dolist (token tokens)
 	     (push token new-tokens)
