@@ -146,6 +146,7 @@
 ;;;-----------------------------------------------------------------------------
 
 (defmethod INITIALIZE-INSTANCE :after ((obj HTML-DOCUMENT) &rest rest)
+  (declare (ignore rest))
   (make-html-document-paragraphs obj)
   (setf (document-links obj) (compute-document-links obj)))
 
@@ -196,6 +197,7 @@
 ;;;---------------------------------------------------------------------------
 
 (defmethod INITIALIZE-INSTANCE :after ((obj PARAGRAPH) &rest initargs)
+  (declare (ignore initargs))
   (unless (paragraph-name obj)
     (when (paragraph-document obj)
       (setf (paragraph-name obj) 
@@ -243,8 +245,9 @@
   (ignore-errors 
    (multiple-value-bind (x1 x2 x3 x4 body)
        (drakma:http-request url)
-     (cond ((= code 404)
-	    ;;(format t "~%Page not found: ~a" url)
+     (declare (ignore x2 x3 x4))
+     (cond ((= x1 404)
+	    (format t "~%Page not found: ~a" url)
 	    nil)
 	   (t
 	    body)))))
@@ -266,6 +269,7 @@
   (ignore-errors 
    (multiple-value-bind (x1 x2 x3 x4 octet-vector)
        (drakma:http-request url)
+       (declare (ignore x1 x2 x3 x4))
      octet-vector)))
  
 ;;;------------------------------------------------------------------------------
@@ -299,9 +303,10 @@
    Don't do any post-processing on it.  Query string may contain embedded
    quotes."
   (let ((query-url (concatenate 'string  "https://www.google.com/search?q=" query-string)))
-   (multiple-value-bind (x1 x2 x3 x4 stream)
+    (multiple-value-bind (x1 x2 x3 x4 stream)
        (drakma:http-request query-url :want-stream t)
-     (setf (flexi-streams:flexi-stream-external-format stream) :utf-8)
+      (declare (ignore x1 x2 x3 x4))
+      (setf (flexi-streams:flexi-stream-external-format stream) :utf-8)
      stream)))
 
 ;;;-----------------------------------------------------------------------------
