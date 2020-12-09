@@ -4,6 +4,8 @@
 
 (in-package :util)
 
+(use-package :drakma)
+
 #-SBCL
 (eval-when (compile load eval)
   (require :aserve))
