@@ -62,7 +62,7 @@
 	  "Split-Sequence"
 	  "Utilities"
 	  "Math"
-	  "Math-3D"
+	  "Math-3d"
 	  "Values"
 	  "Strings"
 	  "Lists"
