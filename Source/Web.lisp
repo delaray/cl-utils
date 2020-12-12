@@ -323,6 +323,16 @@
 	   :query `(("q" . ,(format nil "site:en.wikipedia.org ~a" query-string))))))
     result-string))
 
+#-ALLEGRO
+(defun GOOGLE-WIKI-SEARCH (query-string)
+  "Send the specified query request to Google, and return the resulting HTML."
+  (let ((query-url query-string))
+    (multiple-value-bind (x1 x2 x3 x4 stream)
+       (drakma:http-request query-url :want-stream t)
+      (declare (ignore x1 x2 x3 x4))
+      (setf (flexi-streams:flexi-stream-external-format stream) :utf-8)
+     stream)))
+
 ;;;-----------------------------------------------------------------------------
 
 #+IGNORE
